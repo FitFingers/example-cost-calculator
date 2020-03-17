@@ -1,9 +1,19 @@
 import React, { useMemo, useState } from "react"
-
+import Img from "gatsby-image"
+import { graphql } from "gatsby"
 import Layout from "../components/layout"
 
-import moment from "moment-timezone"
-import { func } from "prop-types"
+export const query = graphql`
+  query {
+    diagram: file(relativePath: { eq: "example.png" }) {
+      childImageSharp {
+        fluid(maxWidth: 1200) {
+          ...GatsbyImageSharpFluid
+        }
+      }
+    }
+  }
+`
 
 const locations = {
   home: {
@@ -47,14 +57,14 @@ const calculatePrice = (loc1, loc2, account) => {
     !locations[loc2] ||
     !accountTypes[account]
   )
-    return "error"
+    return ""
   return (
     priceTable[Math.max(locations[loc1].zone, locations[loc2].zone)] *
     accountTypes[account].multiplier
   )
 }
 
-const IndexPage = () => {
+const IndexPage = ({ data }) => {
   const [loc1, setloc1] = useState("")
   const [loc2, setloc2] = useState("")
   const [account, setaccount] = useState("")
@@ -109,11 +119,27 @@ const IndexPage = () => {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", fontSize: "1.2rem" }}>
-        <p>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          fontSize: "1.2rem",
+        }}
+      >
+        <p style={{ marginTop: "2rem" }}>
           The price from {loc1} to {loc2} for user type "{account}" is
         </p>
-        <h1>{price}</h1>
+        <h1>{price ? `€${price}` : "error"}</h1>
+        <p style={{ fontSize: "0.8rem", opacity: 0.66, marginTop: "2rem" }}>
+          Price is calculated by using total number of zones travelled
+          multiplied by the client's price bracket ("500" class multiplies the
+          base price by 1.25)
+        </p>
+      </div>
+
+      <div style={{ marginTop: "10%" }}>
+        <Img fluid={data.diagram.childImageSharp.fluid} />
       </div>
     </Layout>
   )
