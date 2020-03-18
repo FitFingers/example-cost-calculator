@@ -31,47 +31,67 @@ const locations = {
 }
 
 const priceTable = {
-  1: 5,
-  2: 12,
-  3: 17,
+  b2c: {
+    1: 17,
+    2: 11,
+    3: 8,
+  },
+  "b2b.500": {
+    1: 16,
+    2: 10.5,
+    3: 7.5,
+  },
+  "b2b.1000": {
+    1: 15.5,
+    2: 10,
+    3: 7,
+  },
+  "b2b.infinity": {
+    1: 15,
+    2: 9.5,
+    3: 7,
+  },
 }
 
-const accountTypes = {
-  "500": {
-    multiplier: 1.25,
-  },
-  "1000": {
-    multiplier: 1.1,
-  },
-  infinity: {
+const zones = {
+  1: {
     multiplier: 1,
   },
+  2: {
+    multiplier: 1.1,
+  },
+  3: {
+    multiplier: 1.25,
+  },
 }
 
-const calculatePrice = (loc1, loc2, account) => {
+const calculatePrice = (loc1, loc2, account, passengers) => {
   if (
     !loc1 ||
     !loc2 ||
     !account ||
     !locations[loc1] ||
     !locations[loc2] ||
-    !accountTypes[account]
+    !priceTable[account]
   )
     return ""
-  return (
-    priceTable[Math.max(locations[loc1].zone, locations[loc2].zone)] *
-    accountTypes[account].multiplier
-  )
+  const { multiplier } = zones[
+    Math.max(locations[loc1].zone, locations[loc2].zone)
+  ]
+  const baseCost = priceTable[account][passengers > 3 ? 3 : passengers]
+  return (Math.round(baseCost * passengers * multiplier * 10) / 10).toFixed(2)
 }
 
 const IndexPage = ({ data }) => {
   const [loc1, setloc1] = useState("")
   const [loc2, setloc2] = useState("")
   const [account, setaccount] = useState("")
-  const price = useMemo(() => calculatePrice(loc1, loc2, account), [
+  const [passengers, setpassengers] = useState()
+  const price = useMemo(() => calculatePrice(loc1, loc2, account, passengers), [
     loc1,
     loc2,
     account,
+    passengers,
   ])
 
   return (
@@ -93,7 +113,13 @@ const IndexPage = ({ data }) => {
           value={account}
           label="User Account"
           update={setaccount}
-          helperText="Account name"
+          helperText="Account (b2c, b2b.500, b2b.1000, b2b.infinity"
+        />
+        <Display
+          value={passengers}
+          label="Passengers"
+          update={setpassengers}
+          helperText="Number of Passengers"
         />
       </div>
       <div
@@ -107,7 +133,7 @@ const IndexPage = ({ data }) => {
         }}
       >
         <div>
-          <p>Locations (zone number):</p>
+          <p>Locations (zone):</p>
           {Object.keys(locations).map(k => (
             <p>
               {k}: {locations[k].zone}
@@ -116,21 +142,72 @@ const IndexPage = ({ data }) => {
         </div>
 
         <div>
-          <p>Price Table:</p>
-          {Object.keys(priceTable).map(k => (
+          <p>Zone Multipliers:</p>
+          {Object.keys(zones).map(k => (
             <p>
-              {k} Zone{k > 1 && "s"}: €{priceTable[k]}
+              {k} zone{k > 1 && "s"}: x{zones[k].multiplier}
             </p>
           ))}
         </div>
 
         <div>
-          <p>Account Types:</p>
-          {Object.keys(accountTypes).map(k => (
-            <p>
-              {k}: x{accountTypes[k].multiplier}
-            </p>
+          <p>Passengers:</p>
+          {Array.from({ length: 3 }).map((k, i) => (
+            <p>{i + 1}</p>
           ))}
+        </div>
+      </div>
+
+      <div style={{ opacity: 0.66, textAlign: "center" }}>
+        <p>Price Table:</p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-evenly",
+            marginTop: "1rem",
+            textAlign: "center",
+          }}
+        >
+          <p>
+            <b>b2c:</b>
+            <br />
+            1: €17,
+            <br />
+            2: €11,
+            <br />
+            3: €8,
+          </p>
+          <p>
+            <b>b2b.500:</b>
+            <br />
+            1: 16,
+            <br />
+            2: 10.5,
+            <br />
+            3: 7.5,
+            <br />
+          </p>
+          <p>
+            <b>b2b.1000:</b>
+            <br />
+            1: 15.5,
+            <br />
+            2: 10,
+            <br />
+            3: 7,
+            <br />
+          </p>
+          <p>
+            <b>b2b.infinity:</b>
+            <br />
+            1: 15,
+            <br />
+            2: 9.5,
+            <br />
+            3: 7,
+            <br />
+          </p>
         </div>
       </div>
 
@@ -143,13 +220,29 @@ const IndexPage = ({ data }) => {
         }}
       >
         <p style={{ marginTop: "2rem" }}>
-          The price from <em><b>{loc1}</b></em> to <em><b>{loc2}</b></em> for user type <em><b>"{account}"</b></em> is
+          The price from{" "}
+          <em>
+            <b>{loc1}</b>
+          </em>{" "}
+          to{" "}
+          <em>
+            <b>{loc2}</b>
+          </em>{" "}
+          with{" "}
+          <em>
+            <b>{passengers}</b>
+          </em>{" "}
+          passenger{passengers > 1 && "s"} for user type{" "}
+          <em>
+            <b>"{account}"</b>
+          </em>{" "}
+          is
         </p>
         <h1>{price ? `€${price}` : "error"}</h1>
         <p style={{ fontSize: "0.8rem", opacity: 0.66, marginTop: "2rem" }}>
-          Price is calculated by using total number of zones travelled
-          multiplied by the client's price bracket ("500" class multiplies the
-          base price by 1.25)
+          Price is calculated by using index of number of passengers and user
+          account type to find base price. The price is then multiplied by the
+          multiplier corresponding with the total number of zones travelled
         </p>
       </div>
 
