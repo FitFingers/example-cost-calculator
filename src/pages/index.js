@@ -77,9 +77,24 @@ const IndexPage = ({ data }) => {
   return (
     <Layout>
       <div style={{ display: "flex", justifyContent: "space-evenly" }}>
-        <Display value={loc1} label="Pickup" update={setloc1} />
-        <Display value={loc2} label="Dropoff" update={setloc2} />
-        <Display value={account} label="User Account" update={setaccount} />
+        <Display
+          value={loc1}
+          label="Pickup"
+          update={setloc1}
+          helperText="Location name"
+        />
+        <Display
+          value={loc2}
+          label="Dropoff"
+          update={setloc2}
+          helperText="Location name"
+        />
+        <Display
+          value={account}
+          label="User Account"
+          update={setaccount}
+          helperText="Account name"
+        />
       </div>
       <div
         style={{
@@ -128,7 +143,7 @@ const IndexPage = ({ data }) => {
         }}
       >
         <p style={{ marginTop: "2rem" }}>
-          The price from {loc1} to {loc2} for user type "{account}" is
+          The price from <em><b>{loc1}</b></em> to <em><b>{loc2}</b></em> for user type <em><b>"{account}"</b></em> is
         </p>
         <h1>{price ? `€${price}` : "error"}</h1>
         <p style={{ fontSize: "0.8rem", opacity: 0.66, marginTop: "2rem" }}>
@@ -145,13 +160,18 @@ const IndexPage = ({ data }) => {
   )
 }
 
-const Display = ({ value, label, update }) => {
+const Display = ({ value, label, update, helperText }) => {
   return (
     <div style={{ textAlign: "center" }}>
       <p>
         <b>{label}: </b>
       </p>
-      <input type="text" value={value} onChange={e => update(e.target.value)} />
+      <input
+        type="text"
+        value={value}
+        onChange={e => update(e.target.value)}
+        placeholder={helperText}
+      />
     </div>
   )
 }
